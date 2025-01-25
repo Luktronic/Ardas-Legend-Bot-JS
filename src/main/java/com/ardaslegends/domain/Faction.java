@@ -1,6 +1,9 @@
 package com.ardaslegends.domain;
 
 import com.ardaslegends.service.exceptions.logic.faction.FactionServiceException;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.Length;
@@ -75,6 +78,26 @@ public final class Faction extends AbstractDomainObject {
         this.homeRegion = homeRegion;
         this.factionBuffDescr = factionBuffDescr;
         this.foodStockpile = 0;
+    }
+
+    public Faction(@NotBlank String name, @NotNull InitialFaction initialFaction, @NotNull Player leader, @NotNull Region homeRegion,
+                   @NotNull ClaimBuild homeClaimbuild, @NotBlank String colorcode, @NotNull Long factionRoleId, @NotBlank String factionBuffDescr, Set<String> aliases) {
+        this.name = name;
+        this.initialFaction = initialFaction;
+        this.leader = leader;
+        this.armies = new ArrayList<>();
+        this.players = new ArrayList<>();
+        players.add(leader);
+        this.regions = new HashSet<>();
+        regions.add(homeRegion);
+        this.claimBuilds = new ArrayList<>();
+        claimBuilds.add(homeClaimbuild);
+        this.allies = new ArrayList<>();
+        this.colorcode = colorcode;
+        this.factionRoleId = factionRoleId;
+        this.homeRegion = homeRegion;
+        this.factionBuffDescr = factionBuffDescr;
+        this.aliases = aliases == null ? new HashSet<>() : new HashSet<>(aliases);
     }
 
     public void addFoodToStockpile(int amount) {
