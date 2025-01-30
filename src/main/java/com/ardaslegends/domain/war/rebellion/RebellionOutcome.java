@@ -1,5 +1,6 @@
 package com.ardaslegends.domain.war.rebellion;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 
 import java.time.OffsetDateTime;
@@ -13,7 +14,7 @@ public class RebellionOutcome {
 	private final OutcomeType outcomeType;
 	private final OffsetDateTime outcomeAchievedAt;
 
-	public RebellionOutcome(OutcomeType outcomeType) {
+	public RebellionOutcome(@NotNull OutcomeType outcomeType) {
 		this.outcomeType = outcomeType;
 		this.outcomeAchievedAt = OffsetDateTime.now();
 	}
