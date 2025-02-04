@@ -80,8 +80,12 @@ public class TestDataFactory {
 		static Set<Region> all;
 
 		static void load() {
-			region100 = new Region("100", null, RegionType.LAND, new HashSet<>(), new HashSet<>(), new HashSet<>());
-			region101 = new Region("101", null, RegionType.LAND, new HashSet<>(), new HashSet<>(), new HashSet<>());
+			val region100Cbs = new HashSet<ClaimBuild>();
+			region100Cbs.add(Claimbuilds.gondorCastle);
+			region100 = new Region("100", null, RegionType.LAND, new HashSet<>(), region100Cbs, new HashSet<>());
+			val region101Cbs = new HashSet<ClaimBuild>();
+			region101Cbs.add(Claimbuilds.gondorTown);
+			region101 = new Region("101", null, RegionType.LAND, new HashSet<>(), region101Cbs, new HashSet<>());
 			region102 = new Region("102", null, RegionType.LAND, new HashSet<>(), new HashSet<>(), new HashSet<>());
 			region103 = new Region("103", null, RegionType.LAND, new HashSet<>(), new HashSet<>(), new HashSet<>());
 
