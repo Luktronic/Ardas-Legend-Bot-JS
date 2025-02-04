@@ -24,7 +24,6 @@ public class TestDataFactory {
 		Claimbuilds.load();
 		Factions.loadFactionGondor();
 
-
 		val end = System.currentTimeMillis();
 
 		log.info("Test data model loaded in {}ms", end-start);
@@ -167,14 +166,17 @@ public class TestDataFactory {
 			players.add(Players.mirak);
 
 			val regions = new HashSet<>(Set.of(Regions.region100, Regions.region101));
-			val claimbuilds = Claimbuilds.gondorBuilds;
+			val claimbuilds = Claimbuilds.gondorBuilds.stream().toList();
 
 			gondor = new Faction("Gondor", Players.luktronic, new ArrayList<>(), players, regions,
-					new ArrayList<>(), new ArrayList<>(), "w", Regions.region101, "w");
+					claimbuilds, new ArrayList<>(), "w", Regions.region101, "w");
 
-			regions.forEach(region -> region.setClaimedBy(Set.of(gondor)));
-			claimbuilds.forEach(cb -> cb.setOwnedBy(gondor));
-			players.forEach(player -> player.setFaction(gondor));
+			regions.stream().filter(Objects::nonNull)
+					.forEach(region -> region.setClaimedBy(Set.of(gondor)));
+			claimbuilds.stream().filter(Objects::nonNull)
+					.forEach(cb -> cb.setOwnedBy(gondor));
+			players.stream().filter(Objects::nonNull)
+					.forEach(player -> player.setFaction(gondor));
 		}
 	}
 
