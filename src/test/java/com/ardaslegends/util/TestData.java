@@ -39,12 +39,18 @@ public class TestData {
 		public static void loadPlayerLuktronic() {
 			luktronic = new Player("Luktronic", UUID.randomUUID().toString(), "12345", null);
 			luktronic.setIsStaff(true);
+			luktronic.setRpChars(new HashSet<>(Set.of(RpChars.belegorn)));
+			luktronic.getRpChars().stream().filter(Objects::nonNull)
+					.forEach(rpChar -> rpChar.setOwner(luktronic));
 		}
 
 
 		public static void loadPlayerMirak() {
 			mirak = new Player("mirak441", UUID.randomUUID().toString(), "6789", null);
 			mirak.setIsStaff(true);
+			mirak.setRpChars(new HashSet<>(Set.of(RpChars.firyawe)));
+			mirak.getRpChars().stream().filter(Objects::nonNull)
+					.forEach(rpChar -> rpChar.setOwner(mirak));
 		}
 	}
 
