@@ -79,12 +79,16 @@ public class TestDataFactory {
 		static Set<Region> all;
 
 		static void load() {
+			val claimedByGondor = new HashSet<Faction>();
+			claimedByGondor.add(Factions.gondor);
+
 			val region100Cbs = new HashSet<ClaimBuild>();
 			region100Cbs.add(Claimbuilds.gondorCastle);
-			region100 = new Region("100", null, RegionType.LAND, new HashSet<>(), region100Cbs, new HashSet<>());
 			val region101Cbs = new HashSet<ClaimBuild>();
 			region101Cbs.add(Claimbuilds.gondorTown);
-			region101 = new Region("101", null, RegionType.LAND, new HashSet<>(), region101Cbs, new HashSet<>());
+			
+			region100 = new Region("100", null, RegionType.LAND, claimedByGondor, region100Cbs, new HashSet<>());
+			region101 = new Region("101", null, RegionType.LAND, claimedByGondor, region101Cbs, new HashSet<>());
 			region102 = new Region("102", null, RegionType.LAND, new HashSet<>(), new HashSet<>(), new HashSet<>());
 			region103 = new Region("103", null, RegionType.LAND, new HashSet<>(), new HashSet<>(), new HashSet<>());
 
@@ -101,10 +105,10 @@ public class TestDataFactory {
 			region105.setNeighboringRegions(Set.of(region101, region102, region104, region106));
 			region106.setNeighboringRegions(Set.of(region102, region103, region105));
 
-			val claimedByGondor = new HashSet<Faction>();
-			claimedByGondor.add(Factions.gondor);
-			region100.setClaimedBy(claimedByGondor);
-			region101.setClaimedBy(claimedByGondor);
+			region100Cbs.stream().filter(Objects::nonNull)
+					.forEach(cb -> cb.setRegion(region100));
+			region101Cbs.stream().filter(Objects::nonNull)
+					.forEach(cb -> cb.setRegion(region101));
 
 			all = new HashSet<>();
 			all.add(region100);
