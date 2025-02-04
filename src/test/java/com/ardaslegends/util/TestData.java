@@ -19,6 +19,7 @@ public class TestData {
 
 		Players.load();
 		Regions.load();
+		ProductionSites.load();
 		Claimbuilds.load();
 		Factions.loadFactionGondor();
 
@@ -135,7 +136,6 @@ public class TestData {
 		public static ClaimBuild gondorCastle;
 		public static ClaimBuild gondorTown;
 		public static Set<ClaimBuild> gondorBuilds;
-		public static ProductionSite wheatFarm;
 
 		public static void load() {
 			loadGondorClaimbuilds();
@@ -160,9 +160,39 @@ public class TestData {
 			val builtBy = new HashSet<>(Set.of(Players.luktronic, Players.mirak));
 			gondorTown = new ClaimBuild("Gondor Town", Regions.region101, ClaimBuildType.TOWN, Factions.gondor, new Coordinate(1,1,1),
 					new ArrayList<>(), "", "", "", builtBy);
-			val prodClaimbuilds = new ArrayList<>(List.of(new ProductionClaimbuild(wheatFarm, gondorTown, 5L)));
+			val prodClaimbuilds = new ArrayList<>(List.of(new ProductionClaimbuild(ProductionSites.wheatFarm, gondorTown, 5L)));
 			gondorTown.setProductionSites(prodClaimbuilds);
 		}
+	}
+
+	public static class ProductionSites {
+		public static ProductionSite wheatFarm;
+
+		public static void load() {
+			loadWheatFarm();
+		}
+
+		public static void loadWheatFarm() {
+			wheatFarm = new ProductionSite(1L, ProductionSiteType.FARM, Resources.wheat, 64);
+			if(Resources.wheat == null)
+				Resources.loadWheat();
+		}
+
+		public static class Resources {
+			public static Resource wheat;
+
+			public static void load() {
+				loadWheat();
+			}
+
+			public static void loadWheat() {
+				val wheatSites = new ArrayList<>(List.of(wheatFarm));
+				wheat = new Resource(1L, "Wheat", "123", ResourceType.CROP, wheatSites);
+				wheatSites.stream().filter(Objects::nonNull)
+						.forEach(site -> site.setProducedResource(wheat));
+			}
+		}
+
 	}
 
 	public static class Factions {
