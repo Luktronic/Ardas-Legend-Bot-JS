@@ -14,9 +14,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class TestData {
 
-
-	@Test
-	public void loadModel() {
+	public static void loadModel() {
 		val start = System.currentTimeMillis();
 
 		Players.load();
