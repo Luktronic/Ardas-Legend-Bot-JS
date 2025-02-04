@@ -98,6 +98,11 @@ public class TestDataFactory {
 			region105.setNeighboringRegions(Set.of(region101, region102, region104, region106));
 			region106.setNeighboringRegions(Set.of(region102, region103, region105));
 
+			val claimedByGondor = new HashSet<Faction>();
+			claimedByGondor.add(Factions.gondor);
+			region100.setClaimedBy(claimedByGondor);
+			region101.setClaimedBy(claimedByGondor);
+
 			all = new HashSet<>();
 			all.add(region100);
 			all.add(region101);
