@@ -11,7 +11,7 @@ import com.ardaslegends.presentation.api.response.player.rpchar.RpCharResponse;
 import com.ardaslegends.service.dto.player.*;
 import com.ardaslegends.service.dto.player.rpchar.CreateRPCharDto;
 import com.ardaslegends.service.dto.player.rpchar.UpdateRpCharDto;
-import com.ardaslegends.util.TestDataFactory;
+import com.ardaslegends.util.DeprecatedTestDataFactory;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.jupiter.api.BeforeEach;
@@ -48,12 +48,12 @@ public class PlayerRestControllerTest extends AbstractIntegrationTest {
     void setup() {
         baseSetup(playerRestController, PlayerRestController.BASE_URL);
 
-        player = TestDataFactory.playerLuktronic();
-        rpChar = TestDataFactory.rpcharBelegorn(player);
-        gondor = TestDataFactory.factionGondor(player);
-        mordor = TestDataFactory.factionMordor(null);
-        player2 = TestDataFactory.playerMirak(gondor);
-        player3 = TestDataFactory.playerHabKeinTeammate(gondor);
+        player = DeprecatedTestDataFactory.playerLuktronic();
+        rpChar = DeprecatedTestDataFactory.rpcharBelegorn(player);
+        gondor = DeprecatedTestDataFactory.factionGondor(player);
+        mordor = DeprecatedTestDataFactory.factionMordor(null);
+        player2 = DeprecatedTestDataFactory.playerMirak(gondor);
+        player3 = DeprecatedTestDataFactory.playerHabKeinTeammate(gondor);
 
         expectedPlayerResponse = new PlayerResponse(player);
         expectedPlayerRpCharResponse = new PlayerRpCharResponse(player);
@@ -66,7 +66,7 @@ public class PlayerRestControllerTest extends AbstractIntegrationTest {
 
     @Test
     void ensureCreatePlayerWorksProperly() throws Exception {
-        val newPlayer = TestDataFactory.playerVernonRoche(gondor);
+        val newPlayer = DeprecatedTestDataFactory.playerVernonRoche(gondor);
         createPlayerDto = new CreatePlayerDto(newPlayer.getIgn(), newPlayer.getDiscordID(), newPlayer.getFaction().getName());
         expectedPlayerResponse = new PlayerResponse(newPlayer);
         // Act
