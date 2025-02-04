@@ -28,55 +28,55 @@ public class TestData {
 	}
 
 	public static class Players {
-		static Player luktronic;
-		static Player mirak;
+		public static Player luktronic;
+		public static Player mirak;
 
-		static void load() {
+		public static void load() {
 			loadPlayerLuktronic();
 			loadPlayerMirak();
 		}
 
-		static void loadPlayerLuktronic() {
+		public static void loadPlayerLuktronic() {
 			luktronic = new Player("Luktronic", UUID.randomUUID().toString(), "12345", null);
 			luktronic.setIsStaff(true);
 		}
 
 
-		static void loadPlayerMirak() {
+		public static void loadPlayerMirak() {
 			mirak = new Player("mirak441", UUID.randomUUID().toString(), "6789", null);
 			mirak.setIsStaff(true);
 		}
 	}
 
 	public static class RpChars {
-		static RPChar belegorn;
-		static RPChar firyawe;
+		public static RPChar belegorn;
+		public static RPChar firyawe;
 
-		static void load() {
+		public static void load() {
 			loadBelegorn();
 			loadFiryawe();
 		}
 
-		static void loadBelegorn() {
+		public static void loadBelegorn() {
 			belegorn = new RPChar(Players.luktronic, "Belegorn", "King of Gondor", "Gondorian gear", true, "someLink");
 		}
 
-		static void loadFiryawe() {
+		public static void loadFiryawe() {
 			firyawe = new RPChar(Players.mirak, "Firyawe", "Prince of Dol Amroth", "Dol Amroth", true, "someLink");
 		}
 	}
 
 	public static class Regions {
-		static Region region100;
-		static Region region101;
-		static Region region102;
-		static Region region103;
-		static Region region104;
-		static Region region105;
-		static Region region106;
-		static Set<Region> all;
+		public static Region region100;
+		public static Region region101;
+		public static Region region102;
+		public static Region region103;
+		public static Region region104;
+		public static Region region105;
+		public static Region region106;
+		public static Set<Region> all;
 
-		static void load() {
+		public static void load() {
 			val claimedByGondor = new HashSet<Faction>();
 			claimedByGondor.add(Factions.gondor);
 
@@ -118,7 +118,7 @@ public class TestData {
 			all.add(region106);
 		}
 
-		static Set<Region> withIds(String... ids) {
+		public static Set<Region> withIds(String... ids) {
 			return all.stream()
 					.filter(region -> Arrays.stream(ids).anyMatch(id -> region.getId().equals(id)))
 					.collect(Collectors.toSet());
@@ -126,16 +126,16 @@ public class TestData {
 	}
 
 	public static class Claimbuilds {
-		static ClaimBuild gondorCastle;
-		static ClaimBuild gondorTown;
-		static Set<ClaimBuild> gondorBuilds;
-		static ProductionSite wheatFarm;
+		public static ClaimBuild gondorCastle;
+		public static ClaimBuild gondorTown;
+		public static Set<ClaimBuild> gondorBuilds;
+		public static ProductionSite wheatFarm;
 
-		static void load() {
+		public static void load() {
 			loadGondorClaimbuilds();
 		}
 
-		static void loadGondorClaimbuilds() {
+		public static void loadGondorClaimbuilds() {
 			loadGondorCastle();
 			loadGondorTown();
 			gondorBuilds = new HashSet<>();
@@ -143,14 +143,14 @@ public class TestData {
 			gondorBuilds.add(gondorTown);
 		}
 
-		static void loadGondorCastle() {
+		public static void loadGondorCastle() {
 			val builtBy = new HashSet<>(Set.of(Players.luktronic));
 			gondorCastle = new ClaimBuild("Gondor Castle", Regions.region100, ClaimBuildType.CASTLE, Factions.gondor, new Coordinate(1,1,1),
 					new ArrayList<>(), "", "", "", builtBy);
 		}
 
 
-		static void loadGondorTown() {
+		public static void loadGondorTown() {
 			val builtBy = new HashSet<>(Set.of(Players.luktronic, Players.mirak));
 			gondorTown = new ClaimBuild("Gondor Town", Regions.region101, ClaimBuildType.TOWN, Factions.gondor, new Coordinate(1,1,1),
 					new ArrayList<>(), "", "", "", builtBy);
@@ -160,9 +160,9 @@ public class TestData {
 	}
 
 	public static class Factions {
-		static Faction gondor;
+		public static Faction gondor;
 
-		static void loadFactionGondor() {
+		public static void loadFactionGondor() {
 			val players = new ArrayList<Player>();
 			players.add(Players.luktronic);
 			players.add(Players.mirak);
