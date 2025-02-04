@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
  * @author <a href="mailto:luktronic@gmx.at">Luktronic</a>
  */
 @Slf4j
-public class TestDataFactory {
+public class TestData {
 
 
 	@Test
