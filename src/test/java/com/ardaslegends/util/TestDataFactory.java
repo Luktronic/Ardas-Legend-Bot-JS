@@ -1,4 +1,4 @@
-package com.ardaslegends.util.factory;
+package com.ardaslegends.util;
 
 import com.ardaslegends.domain.*;
 import lombok.extern.slf4j.Slf4j;
