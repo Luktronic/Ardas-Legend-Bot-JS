@@ -121,7 +121,7 @@ public class ArmyService extends AbstractService<Army, ArmyRepository> {
         // TODO: Relay info if army is free or costs something
 
         log.trace("Assembling Army Object");
-        Army army = new Army(dto.name(),
+        final Army army = new Army(dto.name(),
                 dto.armyType(),
                 fetchedPlayer.getFaction(),
                 inputClaimBuild.getRegion(),
@@ -140,20 +140,18 @@ public class ArmyService extends AbstractService<Army, ArmyRepository> {
                 isPaid);
 
         log.trace("Adding the army to each unit");
-        Army finalArmy = army;
-        units.forEach(unit -> unit.setArmy(finalArmy));
+        units.forEach(unit -> unit.setArmy(army));
 
         army.setUnits(units);
 
-        log.info("BEFORE SAVE How many armies are in createdArmies [{}]", inputClaimBuild.getCreatedArmies().size());
-
-
+        log.debug("BEFORE SAVE How many armies are in createdArmies [{}]", inputClaimBuild.getCreatedArmies().size());
+        
         log.debug("Trying to persist the army object");
-        army = secureSave(army, armyRepository);
+        Army finalArmy = secureSave(army, armyRepository);
 
-        log.info("AFTER SAVE How many armies are in createdArmies [{}] ", inputClaimBuild.getCreatedArmies().size());
-        log.info("Successfully created army [{}]!", army.getName());
-        return army;
+        log.debug("AFTER SAVE How many armies are in createdArmies [{}] ", inputClaimBuild.getCreatedArmies().size());
+        log.info("Successfully created army [{}]!", finalArmy.getName());
+        return finalArmy;
     }
 
     @Transactional(readOnly = false)
@@ -527,8 +525,8 @@ public class ArmyService extends AbstractService<Army, ArmyRepository> {
         log.info("Unstation Army Service Method for Army [{}] completed successfully");
         return army;
     }
-    @Transactional(readOnly = false)
-    public Army disband(DeleteArmyDto dto, boolean forced) {
+
+    public Army disbandFromDto(DeleteArmyDto dto, boolean forced) {
         log.debug("Trying to disband army [{}] executed by player [{}]", dto.armyName(), dto.executorDiscordId());
 
         log.trace("Validating data");
@@ -579,6 +577,23 @@ public class ArmyService extends AbstractService<Army, ArmyRepository> {
          */
         var sieges = army.getSieges().size();
         log.info("Disbanded army [{}] - executed by player [{}]", army, player);
+        return army;
+    }
+
+    @Transactional(readOnly = false)
+    public Army disband(Army army) {
+        log.debug("Disbanding army [{}]", army);
+
+        if(army.getBoundTo() != null) {
+            log.debug("Unbinding bound player [{}]", army.getBoundTo().getOwner().getIgn());
+            army.getBoundTo().setBoundTo(null);
+            army.setBoundTo(null);
+        }
+
+        log.debug("Deleting army [{}]", army);
+        secureDelete(army, armyRepository);
+
+        log.info("Disbanded army [{}]", army);
         return army;
     }
 

@@ -10,7 +10,5 @@ import java.util.Optional;
 
 @Repository
 public interface ProductionSiteRepository extends JpaRepository<ProductionSite, Long>, ProductionSiteRepositoryCustom {
-    //TODO Test this class
 
-    Optional<ProductionSite> findProductionSiteByTypeAndProducedResource_ResourceName(ProductionSiteType type, String producedResource);
 }

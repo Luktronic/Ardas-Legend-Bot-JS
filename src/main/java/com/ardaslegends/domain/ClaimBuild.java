@@ -1,6 +1,5 @@
 package com.ardaslegends.domain;
 
-import com.fasterxml.jackson.annotation.*;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 
@@ -17,9 +16,6 @@ import java.util.*;
 
 @Entity
 @Table(name = "claimbuilds")
-@JsonIdentityInfo(
-        generator = ObjectIdGenerators.PropertyGenerator.class,
-        property = "name")
 public final class ClaimBuild extends AbstractEntity {
 
     @Column(unique = true)
@@ -44,11 +40,9 @@ public final class ClaimBuild extends AbstractEntity {
     private Coordinate coordinates; //coordinate locations
 
     @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, mappedBy = "stationedAt")
-    @JsonIdentityReference(alwaysAsId=true)
     private List<Army> stationedArmies = new ArrayList<>(); //armies which are stationed in this CB
 
     @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, mappedBy = "originalClaimbuild")
-    @JsonIdentityReference(alwaysAsId=true)
     private List<Army> createdArmies = new ArrayList<>(); //armies which were created from this CB. Usually only 1 army, but capitals can create 2
 
     @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE}, mappedBy = "claimbuild")
@@ -100,7 +94,6 @@ public final class ClaimBuild extends AbstractEntity {
     }
 
 
-    @JsonIgnore
     public int getCountOfArmies() {
         int count = (int) createdArmies.stream()
                 .filter(army -> ArmyType.ARMY.equals(army.getArmyType()))
@@ -109,7 +102,6 @@ public final class ClaimBuild extends AbstractEntity {
         return count;
     }
 
-    @JsonIgnore
     public int getCountOfTradingCompanies() {
         int count = (int) createdArmies.stream()
                 .filter(army -> ArmyType.TRADING_COMPANY.equals(army.getArmyType()))
@@ -129,7 +121,6 @@ public final class ClaimBuild extends AbstractEntity {
         return false;
     }
 
-    @JsonIgnore
     public boolean atMaxTradingCompanies() {
         int countOfTradingCompanies = getCountOfTradingCompanies();
         int maxTradingCompanies = getType().getMaxTradingCompanies();

@@ -1,19 +1,25 @@
-package com.ardaslegends.service;
+package com.ardaslegends.service.time;
 
 import com.ardaslegends.domain.*;
 import com.ardaslegends.repository.ArmyRepository;
 import com.ardaslegends.repository.MovementRepository;
 import com.ardaslegends.repository.player.PlayerRepository;
+import com.ardaslegends.service.ArmyService;
+import com.ardaslegends.service.MovementService;
+import com.ardaslegends.service.PlayerService;
 import com.ardaslegends.service.exceptions.logic.player.PlayerServiceException;
 import com.ardaslegends.service.utils.ServiceUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.Comparator;
 import java.util.List;
@@ -34,6 +40,7 @@ public class ScheduleService {
     private final MovementService movementService;
     private final ArmyService armyService;
     private final PlayerService playerService;
+    private final TimeFreezeService timeFreezeService;
     private final Clock clock;
 
     @Scheduled(cron = "0 */15 * ? * *")
@@ -91,184 +98,68 @@ public class ScheduleService {
     }
 
     private void handleSingleMovement(Movement movement, OffsetDateTime now) {
-        log.debug("Handling movement [{}]", movement);
-        OffsetDateTime endTime = movement.getEndTime();
+        log.debug("Handling movement of {} {} with path {}", movement.getMovingEntity(), movement.getMovingEntityName(),
+                ServiceUtils.buildPathStringWithCurrentRegion(movement.getPath(), movement.getCurrentRegion()));
+        log.debug("Movement data: {}", movement);
 
-        log.debug("Getting the hours between current time [{}] and end date [{}]", now, endTime);
-
-        /*
-        Get difference between now and endTime in hours
-        This shows us how many hours are left in the movement
-         */
-
-        //we have to add 1 here because we want to know how many hours have passed
-        //HOURS.between returns 0 if you have 00:59:59 minutes/seconds
-        int hoursLeft = (int) HOURS.between(now, endTime) + 1;
-        if(now.isAfter(endTime)) {
-            log.debug("Current date is after end date, setting hours left to 0");
-            hoursLeft = 0;
-        }
-        log.debug("Hours left: [{}]", hoursLeft);
-
-        if(hoursLeft <= 0) {
-            log.debug("Movement has less than or 0 hours left - completing it");
-            PathElement destinationRegion = movement.getPath().get(movement.getPath().size()-1);
-            if(movement.getIsCharMovement()) {
-                log.trace("Movement is char movement, setting current region to [{}]", destinationRegion);
-                movement.getRpChar().setCurrentRegion(destinationRegion.getRegion());
-            }
-            else {
-                log.trace("Movement is army movement, setting current region to [{}]", destinationRegion);
-                movement.getArmy().setCurrentRegion(destinationRegion.getRegion());
-                if(movement.getArmy().getBoundTo() != null) {
-                    log.trace("Army is bound to a character, setting the character's region to [{}]", destinationRegion);
-                    movement.getArmy().getBoundTo().setCurrentRegion(destinationRegion.getRegion());
-                }
-            }
-            log.debug("Setting isCurrentlyActive to false");
-            movement.setIsCurrentlyActive(false);
+        if(timeFreezeService.isTimeFrozen()) {
+            log.debug("Time is frozen - delaying movement");
+            val timeSinceLastUpdate = Duration.between(movement.getLastUpdatedAt(), now);
+            log.trace("Duration since last movement update: [{}]", ServiceUtils.formatDuration(timeSinceLastUpdate));
+            log.debug("Delaying movement by [{}]", ServiceUtils.formatDuration(timeSinceLastUpdate));
+            log.debug("Old ReachesNextRegionAt: [{}]", movement.getReachesNextRegionAt());
+            movement.setReachesNextRegionAt(movement.getReachesNextRegionAt().plus(timeSinceLastUpdate));
+            log.debug("New ReachesNextRegionAt: [{}]", movement.getReachesNextRegionAt());
+            log.debug("Old EndsAt: [{}]", movement.getEndTime());
+            movement.setEndTime(movement.getEndTime().plus(timeSinceLastUpdate));
+            log.debug("New EndsAt: [{}]", movement.getEndTime());
         }
 
-        /*
-        We get the hours moved since last time by subtracting the current hours left
-        with the last hours left (the value that was last stored in the movement)
-         */
+        log.trace("Entering loop while now [{}] is after reachesNextRegionAt [{}]", now, movement.getReachesNextRegionAt());
+        while(now.isAfter(movement.getReachesNextRegionAt())) {
+            log.trace("Now [{}] is after reachesNextRegionAt [{}]", now, movement.getReachesNextRegionAt());
+            log.trace("Updating current region from [{}] to [{}]", movement.getCurrentRegion(), movement.getNextRegion());
+            movement.setCurrentRegion(movement.getNextRegion());
 
-        int hoursMovedSinceLastTime = movement.getHoursUntilComplete() - hoursLeft;
-        log.debug("Hours moved since last time: [{}]", hoursMovedSinceLastTime);
-
-        //If we didn't move an hour since last time, exit function
-
-        if(hoursMovedSinceLastTime == 0 && hoursLeft != 0) {
-            log.debug("No hour has passed for this movement - exiting function");
-            return;
-        }
-
-
-        log.debug("Updating movement data");
-
-        //Get the amount of hours a movement has been going on by getting the last hoursMoved and adding hoursMovedSinceLastTime
-        int newHoursMoved = movement.getHoursMoved() + hoursMovedSinceLastTime;
-        log.trace("Incrementing hoursMoved from [{}] to [{}]", movement.getHoursMoved(), newHoursMoved);
-        movement.setHoursMoved(newHoursMoved);
-
-        //Set the old hoursUntilComplete to the newly calculated value
-        log.trace("Setting hoursUntilComplete from [{}] to [{}]", movement.getHoursUntilComplete(), hoursLeft);
-        movement.setHoursUntilComplete(hoursLeft);
-
-        /*
-        Now we have to get the current region of the army/character. We have to check if the movement is a character movement.
-        If yes, get the region of the player's rpchar
-        If not, get the region of the army
-         */
-
-        Region currentRegion = null;
-        if(movement.getIsCharMovement())
-            currentRegion = movement.getRpChar().getCurrentRegion();
-        else
-            currentRegion = movement.getArmy().getCurrentRegion();
-
-        /*
-        Now we calculate the hours until the next region by subtracting hoursMovedSinceLast time from the old value.
-        However, the hoursUntilNextRegion could be negative when the bot hasn't checked movements for a while
-        For this reason, we enter a while loop that constantly updates the current region of the army/character
-        We keep doing this until we have arrived in the region that the army/char should be at
-         */
-
-        int hoursUntilNextRegion = movement.getHoursUntilNextRegion() - hoursMovedSinceLastTime;
-        log.trace("Hours until next region: [{}] - [{}] = [{}]", movement.getHoursUntilNextRegion(), hoursMovedSinceLastTime, hoursUntilNextRegion);
-
-        log.trace("Entering while loop as long as hoursUntilNextRegion is negative");
-        List<PathElement> path = movement.getPath();
-        Region finalCurrentRegion = currentRegion;
-        int currentRegionIndex = path.indexOf(path.stream().filter(pe -> pe.hasRegion(finalCurrentRegion)).findFirst().get());
-        PathElement nextPathRegion = null;
-
-        if(currentRegionIndex == path.size()-1)
-            nextPathRegion = path.get(currentRegionIndex);
-
-        while(hoursUntilNextRegion <= 0) {
-            log.trace("Hours until next region: [{}]", hoursUntilNextRegion);
-
-            /*
-            Fetch the next region, but only if nextRegion is null
-            This happens only on the first iteration, because on the other ones we already have the instance of the next region
-            I did this so we don't fetch the same region twice
-             */
-
-            if(nextPathRegion == null) {
-                log.trace("Setting nextRegion");
-                nextPathRegion = path.get(currentRegionIndex + 1);
-                log.trace("Set next region to [{}]", nextPathRegion);
-            }
-
-            /*
-            If movement is a char movement, set the char's currentRegion to the next region
-            If it's an army movement, set army's region to nextRegion
-            If the army is bound to a character, set also the character's currentRegion
-             */
-
-            if(movement.getIsCharMovement()) {
-                log.trace("Movement is char movement, setting current region to [{}]", nextPathRegion);
-                movement.getRpChar().setCurrentRegion(nextPathRegion.getRegion());
-            }
-            else {
-                log.trace("Movement is army movement, setting current region to [{}]", nextPathRegion);
-                movement.getArmy().setCurrentRegion(nextPathRegion.getRegion());
-                if(movement.getArmy().getBoundTo() != null) {
-                    log.trace("Army is bound to a character, setting the character's region to [{}]", nextPathRegion);
-                    movement.getArmy().getBoundTo().setCurrentRegion(nextPathRegion.getRegion());
-                }
-            }
-
-            /*
-            If the next region is the destination, set isActive to false and also set the hoursUntilNextRegion to 0
-            so we break out of the loop
-             */
-
-            log.trace("Checking if next region is destination");
-            if(path.get(path.size()-1).equals(nextPathRegion)) {
-                if(movement.getIsCharMovement())
-                    log.info("Movement of character [{}] with path [{}] reached its destination, setting isActive to false"
-                            , movement.getRpChar(), ServiceUtils.buildPathString(path));
-                else
-                    log.info("Movement of army [{}] with path [{}] reached its destination, setting isActive to false"
-                            , movement.getArmy(), ServiceUtils.buildPathString(path));
-                log.trace("Next region is destination");
-                log.trace("Setting hoursUntilNextRegion to 0");
-                log.trace("Setting movement isActive = false");
-                movement.setIsCurrentlyActive(false);
+            log.trace("Checking if current region is destination");
+            if(movement.getNextPathElement() == null) {
+                log.info("Movement of {} {} with path [{}] reached its destination, setting isActive to false", movement.getMovingEntity(), movement.getMovingEntityName(),
+                        ServiceUtils.buildPathString(movement.getPath()));
+                movement.end();
                 break;
             }
-            else {
 
-                /*
-                If the next region was not the last, fetch the region after that one and calculate the new
-                hoursUntilNextRegion
-                 */
-
-                log.trace("Now current region is not destination - fetching next region and calculating new hoursUntilNextRegion");
-
-                //Incrementing the currentRegionIndex because we iterated to the next region
-                currentRegionIndex++;
-                //Get the Id of the new next region
-                nextPathRegion = path.get(currentRegionIndex + 1);
-                log.trace("Set region [{}] as next path region", nextPathRegion);
-
-                log.trace("Calculating new hoursUntilNextRegion");
-
-                hoursUntilNextRegion = hoursUntilNextRegion + nextPathRegion.getActualCost();
-                movement.setHoursUntilNextRegion(hoursUntilNextRegion);
-                log.trace("New hoursUntilNextRegion: [{}]", hoursUntilNextRegion);
-            }
-
+            log.trace("Calculating new reachesNextRegionAt");
+            val reachesNewRegionAt = movement.getReachesNextRegionAt().plusHours(movement.getNextPathElement().getActualCost());
+            log.trace("Reaches new next region at: [{}]", reachesNewRegionAt);
+            log.trace("Updating reachesNextRegionAt");
+            movement.setReachesNextRegionAt(reachesNewRegionAt);
         }
         log.trace("Exited while loop");
+
+        log.trace("Setting movement lastUpdatedAt to now [{}]", now);
+        movement.setLastUpdatedAt(now);
+
+        log.debug("Finished handling movement of {} {} with path {}", movement.getMovingEntity(), movement.getMovingEntityName(),
+                ServiceUtils.buildPathStringWithCurrentRegion(movement.getPath(), movement.getCurrentRegion()));
     }
 
     private void handleHealingArmy(Army army, OffsetDateTime now) {
         log.debug("Handling healing army [{}]", army);
         OffsetDateTime endTime = army.getHealEnd();
+
+        if(timeFreezeService.isTimeFrozen()) {
+            log.debug("Time is frozen - delaying army healing");
+            val timeSinceLastUpdate = Duration.between(army.getHealLastUpdatedAt(), now);
+            log.trace("Duration since last army healing update: [{}]", ServiceUtils.formatDuration(timeSinceLastUpdate));
+            log.debug("Delaying army healing by [{}]", ServiceUtils.formatDuration(timeSinceLastUpdate));
+            log.debug("Old HealEnd: [{}]", army.getHealEnd());
+            army.setHealEnd(army.getHealEnd().plus(timeSinceLastUpdate));
+            log.debug("New HealEnd: [{}]", army.getHealEnd());
+        }
+
+        log.debug("Setting HealingLastUpdatedAt to now [{}]", now);
+        army.setHealLastUpdatedAt(now);
 
         log.debug("Getting the hours between end date [{}] and current time [{}]", endTime, now);
 
@@ -302,7 +193,7 @@ public class ScheduleService {
         int hoursHealedSinceLastTime = army.getHoursLeftHealing() - hoursLeft;
         log.debug("Hours healed since last time: [{}]", hoursHealedSinceLastTime);
 
-        //If we didn't move an hour since last time, exit function
+        //If we didn't heal an hour since last time, exit function
 
         if(hoursHealedSinceLastTime == 0 && hoursLeft != 0) {
             log.debug("No hour has passed for this healing - exiting function");
@@ -409,6 +300,19 @@ public class ScheduleService {
         RPChar rpChar = player.getActiveCharacter().orElseThrow(PlayerServiceException::noRpChar);
         log.trace("Got player's rpchar [{}]", rpChar);
         OffsetDateTime endTime = rpChar.getHealEnds();
+
+        if(timeFreezeService.isTimeFrozen()) {
+            log.debug("Time is frozen - delaying army healing");
+            val timeSinceLastUpdate = Duration.between(rpChar.getHealLastUpdatedAt(), now);
+            log.trace("Duration since last rpChar healing update: [{}]", ServiceUtils.formatDuration(timeSinceLastUpdate));
+            log.debug("Delaying rpChar healing by [{}]", ServiceUtils.formatDuration(timeSinceLastUpdate));
+            log.debug("Old HealEnd: [{}]", rpChar.getHealEnds());
+            rpChar.setHealEnds(rpChar.getHealEnds().plus(timeSinceLastUpdate));
+            log.debug("New HealEnd: [{}]", rpChar.getHealEnds());
+        }
+
+        log.debug("Setting HealingLastUpdatedAt to now [{}]", now);
+        rpChar.setHealLastUpdatedAt(now);
 
         log.debug("Getting the hours between end date [{}] and current time [{}]", endTime, now);
 

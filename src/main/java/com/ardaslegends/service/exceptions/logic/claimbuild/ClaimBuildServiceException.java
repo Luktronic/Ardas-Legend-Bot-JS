@@ -5,6 +5,7 @@ import com.ardaslegends.service.exceptions.logic.LogicException;
 public class ClaimBuildServiceException extends LogicException {
 
     private static final String NO_CB_WITH_NAME = "Found no claimbuild with name '%s'!";
+    private static final String NO_CB_FOR_FACTION = "Faction '%s' has no claimbuilds!";
     private static final String DIFFERENT_FACTION = "The claimbuild '%s' is part of a different faction ('%s') - you cannot interact with it!";
     private static final String DIFFERENT_FACTION_NOT_ALLIED = "The claimbuild '%s' is part of the faction '%s' - you are not allied with '%s' and therefore cannot interact with it!";
     private static final String REGION_IS_NOT_CLAIMABLE_FOR_FACTION = "Region '%s' is not claimable for the faction '%s' because the region is not unclaimed and the faction does not have a Claimbuild already in that region.";
@@ -26,6 +27,7 @@ public class ClaimBuildServiceException extends LogicException {
             "Actual Grammar=[Player]-[Player2]-[Player3]";
 
     public static ClaimBuildServiceException noCbWithName(String cbName) { return new ClaimBuildServiceException(NO_CB_WITH_NAME.formatted(cbName)); }
+    public static ClaimBuildServiceException factionHasNoCbs(String factionName) { return new ClaimBuildServiceException(NO_CB_FOR_FACTION.formatted(factionName)); }
     public static ClaimBuildServiceException differentFaction(String cbName, String factionName) { return new ClaimBuildServiceException(DIFFERENT_FACTION.formatted(cbName, factionName)); }
     public static ClaimBuildServiceException differentFactionNotAllied(String cbName, String factionName) { return new ClaimBuildServiceException(DIFFERENT_FACTION_NOT_ALLIED.formatted(cbName, factionName, factionName)); }
     public static ClaimBuildServiceException regionIsNotClaimableForFaction(String regionId, String factionName) {return new ClaimBuildServiceException(REGION_IS_NOT_CLAIMABLE_FOR_FACTION.formatted(regionId,factionName));}

@@ -16,10 +16,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: Set up JDK 19
+    - name: Set up JDK 21
       uses: actions/setup-java@v3
       with:
-        java-version: '19'
+        java-version: '21'
         distribution: 'temurin'
         cache: maven
     - name: Test env variables
@@ -42,4 +42,4 @@ jobs:
         DEV_RP_APPS_CHANNEL: ${{ secrets.DEV_RP_APPS_CHANNEL }}
         DEV_ERROR_CHANNEL: ${{ secrets.DEV_ERROR_CHANNEL }}
         DEV_CB_APP_CHANNEL: ${{ secrets.DEV_CB_APP_CHANNEL }}
-      run: mvn -B clean verify --file pom.xml -D"ardaslegends.bot.token"=$INTEGRATION_BOT_TOKEN -D"ardaslegends.bot.server"=$DEV_SERVER_TOKEN -D"ardaslegends.bot.staff-roles"=$DEV_STAFF_ROLES -D"ardaslegends.roleplay.commands.channel"=$DEV_RP_COMMANDS_CHANNEL -D"ardaslegends.roleplay.apps.channel"=$DEV_RP_APPS_CHANNEL -D"ardaslegends.bot.error.channel"=$DEV_ERROR_CHANNEL -D"ardaslegends.claimbuild.apps.channel"=$DEV_CB_APP_CHANNEL -D"spring.sql.init.mode"=always -D"spring.jpa.defer-datasource-initialization"=true -D"spring.flyway.enabled"=false
+      run: mvn -B clean verify --file pom.xml -D"ardaslegends.bot.token"=$INTEGRATION_BOT_TOKEN -D"ardaslegends.bot.server"=$DEV_SERVER_TOKEN -D"ardaslegends.bot.staff-roles"=$DEV_STAFF_ROLES -D"ardaslegends.roleplay.commands.channel"=$DEV_RP_COMMANDS_CHANNEL -D"ardaslegends.roleplay.apps.channel"=$DEV_RP_APPS_CHANNEL -D"ardaslegends.bot.error.channel"=$DEV_ERROR_CHANNEL -D"ardaslegends.claimbuild.apps.channel"=$DEV_CB_APP_CHANNEL -D"spring.sql.init.mode"=always -D"spring.jpa.defer-datasource-initialization"=true -D"spring.flyway.enabled"=false -D"junit.parallel.mode.class"=same_thread -D"junit.parallel.mode.method"=same_thread

@@ -1,4 +1,4 @@
-package com.ardaslegends.service.dto.war;
+package com.ardaslegends.service.dto.war.battle;
 
 public record CreateBattleDto(
         String executorDiscordId,

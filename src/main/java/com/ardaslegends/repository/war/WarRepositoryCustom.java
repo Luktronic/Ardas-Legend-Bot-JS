@@ -10,4 +10,5 @@ public interface WarRepositoryCustom {
     Set<War> queryWarsByFaction(Faction faction, QueryWarStatus warStatus);
     Set<War> queryWarsBetweenFactions(Faction faction1, Faction faction2, QueryWarStatus warStatus);
     Optional<War> queryActiveInitialWarBetween(Faction faction1, Faction faction2);
+    Optional<War> queryActiveWarByName(String name);
 }

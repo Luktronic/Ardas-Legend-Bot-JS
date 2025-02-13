@@ -1,8 +1,5 @@
 package com.ardaslegends.domain;
 
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import lombok.*;
 
 import jakarta.persistence.*;
@@ -15,9 +12,6 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "units")
-@JsonIdentityInfo(
-        generator = ObjectIdGenerators.PropertyGenerator.class,
-        property = "unitType")
 public final class Unit extends AbstractDomainObject {
 
     @Id
@@ -37,7 +31,6 @@ public final class Unit extends AbstractDomainObject {
     private Integer amountAlive; //current alive soldiers
     private Boolean isMounted;
 
-    @JsonIgnore
     public Double getCost() {
         return isMounted ? unitType.getTokenCost() + 1 : unitType.getTokenCost();
     }

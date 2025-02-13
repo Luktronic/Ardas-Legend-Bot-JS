@@ -41,7 +41,7 @@ public class DisbandArmyOrcompanyCommand implements ALCommandExecutor {
         log.debug("Built dto with data [{}]", dto);
 
         log.trace("Calling armyService");
-        Army army = discordServiceExecution(dto, false, armyService::disband, "Error while disbanding Army/Company");
+        Army army = discordServiceExecution(dto, false, armyService::disbandFromDto, "Error while disbanding Army/Company");
         String armyType = army.getArmyType().getName();
 
         String thumbnail = "";

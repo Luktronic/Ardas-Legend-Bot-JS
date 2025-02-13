@@ -37,7 +37,7 @@ public class DeleteArmyOrCompanyCommand implements ALStaffCommandExecutor {
         DeleteArmyDto dto = new DeleteArmyDto(interaction.getUser().getIdAsString(), armyName);
 
         log.debug("DeleteArmy: Calling Service Execution");
-        var army = discordServiceExecution(dto, true, armyService::disband, "Error while deleting army");
+        var army = discordServiceExecution(dto, true, armyService::disbandFromDto, "Error while deleting army");
 
         String armyType = army.getArmyType().getName();
 

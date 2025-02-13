@@ -8,7 +8,7 @@ import java.io.Serializable;
 import java.util.Objects;
 
 
-/***
+/**
  * This is the Id Mapping for the Production - Claimbuild Association Table
  * Without this, JPA doesn't map the primary key correctly
  */

@@ -32,6 +32,7 @@ import java.util.stream.Collectors;
 public class ClaimbuildRestController extends AbstractRestController {
     public static final String BASE_URL = "/api/claimbuild";
     public static final String NAME = "/name";
+    public static final String FACTION = "/faction";
     public static final String GET_TYPES = "/types";
     public static final String GET_SPECIAL_BUILDINGS = "/specialbuildings";
     public static final String PATH_CREATE_CLAIMBUILD = "/create";
@@ -76,6 +77,19 @@ public class ClaimbuildRestController extends AbstractRestController {
         return ResponseEntity.ok(response);
     }
 
+    @Operation(summary = "Get Claimbuilds By Faction", description = "Returns an array of claimbuilds of the specified faction")
+    @GetMapping(FACTION)
+    public ResponseEntity<ClaimbuildResponse[]> getClaimbuildsByFaction(@RequestParam String faction) {
+        log.debug("Incoming getClaimbuildsByFaction Request, parameter faction: [{}]", faction);
+
+        List<ClaimBuild> claimBuilds = claimBuildService.getClaimBuildsByFaction(faction);
+
+        log.debug("Building ClaimbuildResponses with claimbuilds [{}]", claimBuilds);
+        ClaimbuildResponse[] response = claimBuilds.stream().map(ClaimbuildResponse::new).toArray(ClaimbuildResponse[]::new);
+
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping(GET_SPECIAL_BUILDINGS)
     public HttpEntity<String[]> getSpecialBuildings() {
         log.debug("Incoming getAllSpecialBuilds request");
@@ -88,25 +102,29 @@ public class ClaimbuildRestController extends AbstractRestController {
     }
 
     @PostMapping(PATH_CREATE_CLAIMBUILD)
-    public HttpEntity<ClaimBuild> createClaimbuild(@RequestBody CreateClaimBuildDto dto) {
+    public HttpEntity<ClaimbuildResponse> createClaimbuild(@RequestBody CreateClaimBuildDto dto) {
         log.debug("Incoming createClaimbuild Request: Data [{}]", dto);
 
         log.debug("Calling claimBuildService.createClaimbuild");
         ClaimBuild claimBuild = claimBuildService.createClaimbuild(dto, true);
 
+        val response = new ClaimbuildResponse(claimBuild);
+
         log.info("Sending successful createClaimbuild Request for [{}]", claimBuild.getName());
-        return ResponseEntity.ok(claimBuild);
+        return ResponseEntity.ok(response);
     }
 
     @PatchMapping(PATH_UPDATE_CLAIMBUILD)
-    public HttpEntity<ClaimBuild> updateClaimbuild(@RequestBody CreateClaimBuildDto dto) {
+    public HttpEntity<ClaimbuildResponse> updateClaimbuild(@RequestBody CreateClaimBuildDto dto) {
         log.debug("Incoming updateClaimbuild Request: Data [{}]", dto);
 
         log.debug("Calling claimBuildService.createClaimbuild");
         ClaimBuild claimBuild = claimBuildService.createClaimbuild(dto, false);
 
+        val response = new ClaimbuildResponse(claimBuild);
+
         log.info("Sending successful updateClaimbuild Request for [{}]", claimBuild.getName());
-        return ResponseEntity.ok(claimBuild);
+        return ResponseEntity.ok(response);
     }
 
     @PatchMapping(UPDATE_CLAIMBUILD_FATION)
@@ -114,7 +132,7 @@ public class ClaimbuildRestController extends AbstractRestController {
         log.debug("Incoming update Claimbuild Owner Request with data [{}]", dto);
 
         log.trace("Calling wrappedServiceExecution of setOwnerFaction");
-        var result = claimBuildService.setOwnerFaction(dto);
+        var result = claimBuildService.changeOwnerFromDto(dto);
 
         log.trace("Building response Dto");
         UpdateClaimbuildOwnerDto response = new UpdateClaimbuildOwnerDto(result.getName(), result.getOwnedBy().getName());

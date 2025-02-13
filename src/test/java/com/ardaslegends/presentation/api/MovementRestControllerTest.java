@@ -9,6 +9,7 @@ import com.ardaslegends.service.MovementService;
 import com.ardaslegends.service.dto.army.MoveArmyDto;
 import com.ardaslegends.service.dto.player.DiscordIdDto;
 import com.ardaslegends.service.dto.player.rpchar.MoveRpCharDto;
+import com.ardaslegends.service.utils.ServiceUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -22,6 +23,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Set;
 
@@ -43,6 +45,7 @@ public class MovementRestControllerTest {
     private PathElement pathElement;
     private PathElement pathElement2;
     private List<PathElement> path;
+    private Movement movement;
 
     @BeforeEach
     void setup() {
@@ -55,6 +58,9 @@ public class MovementRestControllerTest {
         pathElement = PathElement.builder().region(region).actualCost(2).build();
         pathElement2 = PathElement.builder().region(region2).actualCost(2).build();
         path = List.of(pathElement, pathElement2);
+        val now = OffsetDateTime.now();
+        movement = Movement.builder().path(path).startTime(now).endTime(now.plusHours(ServiceUtils.getTotalPathCost(path)))
+                .reachesNextRegionAt(now.plusHours(pathElement2.getActualCost())).build();
     }
 
     @Test
@@ -63,9 +69,6 @@ public class MovementRestControllerTest {
 
         log.trace("Initializing Dto");
         MoveRpCharDto dto = new MoveRpCharDto("RandoId","12.S");
-
-        log.trace("Initialize return movement");
-        Movement movement = Movement.builder().path(path).build();
 
         log.trace("Initializing mock methods");
         when(mockMovementService.createRpCharMovement(dto)).thenReturn(movement);
@@ -90,9 +93,6 @@ public class MovementRestControllerTest {
         log.trace("Initializing Dto");
         MoveArmyDto dto = new MoveArmyDto("RandoId", "test","12.S");
 
-        log.trace("Initialize return movement");
-        Movement movement = Movement.builder().path(path).build();
-
         when(mockMovementService.calculateArmyMovement(dto)).thenReturn(movement);
         val pathUri = new URIBuilder("https://localhost:8080/api/movement" + MovementRestController.PATH_CALCULATE_ARMY_MOVEMENT)
                 .addParameter("executorDiscordId", dto.executorDiscordId())
@@ -111,9 +111,6 @@ public class MovementRestControllerTest {
         log.trace("Initializing Dto");
         MoveRpCharDto dto = new MoveRpCharDto("RandoId","12.S");
 
-        log.trace("Initialize return movement");
-        Movement movement = Movement.builder().path(path).build();
-
         when(mockMovementService.calculateRpCharMovement(dto)).thenReturn(movement);
         val pathUri = new URIBuilder("https://localhost:8080/api/movement" + MovementRestController.PATH_CALCULATE_CHAR_MOVEMENT)
                 .addParameter("discordId", dto.discordId())
@@ -130,9 +127,6 @@ public class MovementRestControllerTest {
 
         log.trace("Initializing Dto");
         DiscordIdDto dto  = new DiscordIdDto("RandoId");
-
-        log.trace("Initialize return movement");
-        Movement movement = Movement.builder().path(path).build();
 
         log.trace("Initializing mock methods");
         when(mockMovementService.cancelRpCharMovement(dto)).thenReturn(movement);
@@ -157,9 +151,6 @@ public class MovementRestControllerTest {
         log.trace("Initializing Dto");
         MoveArmyDto dto = new MoveArmyDto("1234","Knights of Gondor", "92");
 
-        log.trace("Initialize return movement");
-        Movement movement = Movement.builder().path(path).build();
-
         log.trace("Initializing mock methods");
         when(mockMovementService.createArmyMovement(dto)).thenReturn(movement);
 
@@ -182,9 +173,6 @@ public class MovementRestControllerTest {
 
         log.trace("Initializing Dto");
         MoveArmyDto dto = new MoveArmyDto("1234","Knights of Gondor", null);
-
-        log.trace("Initialize return movement");
-        Movement movement = Movement.builder().path(path).build();
 
         log.trace("Initializing mock methods");
         when(mockMovementService.cancelArmyMovement(dto)).thenReturn(movement);

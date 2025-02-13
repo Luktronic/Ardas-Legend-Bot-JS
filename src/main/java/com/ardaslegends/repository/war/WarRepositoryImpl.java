@@ -83,6 +83,19 @@ public class WarRepositoryImpl extends QuerydslRepositorySupport implements WarR
         return Optional.ofNullable(result);
     }
 
+    @Override
+    public Optional<War> queryActiveWarByName(String name) {
+        Objects.requireNonNull(name, "War name must not be null in queryActiveWarByName!");
+
+        QWar qWar = QWar.war;
+
+        val result = from(qWar)
+                .where(qWar.isActive.and(qWar.name.eq(name)))
+                .fetchFirst();
+
+        return Optional.ofNullable(result);
+    }
+
     private BooleanExpression activePredicate(QueryWarStatus warStatus) {
         Objects.requireNonNull(warStatus, "WarStatus must not be null");
         val war = QWar.war;

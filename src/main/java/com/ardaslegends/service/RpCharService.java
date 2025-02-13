@@ -1,5 +1,6 @@
 package com.ardaslegends.service;
 
+import com.ardaslegends.domain.Army;
 import com.ardaslegends.domain.RPChar;
 import com.ardaslegends.repository.rpchar.RpcharRepository;
 import com.ardaslegends.service.exceptions.logic.rpchar.RpCharServiceException;
@@ -60,5 +61,10 @@ public class RpCharService extends AbstractService<RPChar, RpcharRepository>{
 
         log.debug("Successfully returning RpChar with name [{}]", name);
         return character.get();
+    }
+
+    public List<RPChar> saveRpChars(List<RPChar> chars) {
+        log.debug("Saving chars [{}]", chars);
+        return secureSaveAll(chars, rpcharRepository);
     }
 }

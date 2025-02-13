@@ -1,7 +1,6 @@
 package com.ardaslegends.domain;
 
 import com.ardaslegends.service.utils.ServiceUtils;
-import com.fasterxml.jackson.annotation.*;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 
@@ -17,9 +16,6 @@ import java.util.*;
 @Slf4j
 @Entity
 @Table(name = "regions")
-@JsonIdentityInfo(
-        generator = ObjectIdGenerators.PropertyGenerator.class,
-        property = "id")
 public final class Region extends AbstractDomainObject {
 
     @Id
@@ -36,7 +32,6 @@ public final class Region extends AbstractDomainObject {
             inverseJoinColumns = { @JoinColumn(name = "faction", foreignKey = @ForeignKey(name = "fk_faction_claimed_regions_faction")) })
     private Set<Faction> claimedBy = new HashSet<>(); //the list of factions which the region is claimed by
 
-    @JsonIgnore
     @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, mappedBy = "region")
     private Set<ClaimBuild> claimBuilds = new HashSet<>(); //list of claimbuilds in this region
 
@@ -52,7 +47,6 @@ public final class Region extends AbstractDomainObject {
     @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, mappedBy = "currentRegion")
     private Set<RPChar> charsInRegion = new HashSet<>(1);
 
-    @JsonIgnore
     public Region(String id, String name, RegionType regionType, Set<Faction> claimedBy, Set<ClaimBuild> claimBuilds, Set<Region> neighboringRegions) {
         this.id = id;
         this.name = name;
@@ -63,7 +57,6 @@ public final class Region extends AbstractDomainObject {
         this.hasOwnershipChanged = false;
     }
 
-    @JsonIgnore
     /**
      *
      * @param possibleNeighbour, the region that you want to add, Not-Null-Constraint
@@ -80,7 +73,6 @@ public final class Region extends AbstractDomainObject {
 
     }
 
-    @JsonIgnore
     public void addFactionToClaimedBy(Faction faction) {
         log.debug("Add claiming faction [{}] to region [{}]", faction, this.id);
 
@@ -99,7 +91,6 @@ public final class Region extends AbstractDomainObject {
         log.debug("Faction [{}] is in region [{}]'s claimedBy Set");
     }
 
-    @JsonIgnore
     public void removeFactionFromClaimedBy(Faction faction) {
         log.debug("Remove claiming faction [{}] from region [{}]", faction, this.id);
 
@@ -125,7 +116,6 @@ public final class Region extends AbstractDomainObject {
         return regionType.getCost();
     }
 
-    @JsonIgnore
     public boolean hasClaimbuildInRegion(Faction faction) {
         Objects.requireNonNull(faction, "Faction must not be null");
 
@@ -136,7 +126,6 @@ public final class Region extends AbstractDomainObject {
         return hasClaimbuild;
     }
 
-    @JsonIgnore
     public boolean isOnlyFactionInRegion(Faction faction) {
         Objects.requireNonNull(faction, "Faction must not be null");
 
@@ -147,7 +136,6 @@ public final class Region extends AbstractDomainObject {
         return isOnlyFaction;
     }
 
-    @JsonIgnore
     public boolean hasFactionOtherClaimbuildThan(ClaimBuild cb) {
         Objects.requireNonNull(cb, "claimbuild must not be null");
 
@@ -158,7 +146,6 @@ public final class Region extends AbstractDomainObject {
         return hasClaimbuild;
     }
 
-    @JsonIgnore
     public boolean isClaimable(Faction faction) {
         Objects.requireNonNull(faction, "Faction must not be null");
 

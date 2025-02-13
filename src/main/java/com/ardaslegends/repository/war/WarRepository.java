@@ -12,7 +12,7 @@ import java.util.Set;
 
 @Repository
 public interface WarRepository extends JpaRepository<War, Long>, WarRepositoryCustom {
-    public Optional<War> findByName(String name);
+    public Set<War> findByName(String name);
 
     @Query("""
             select w from War w 

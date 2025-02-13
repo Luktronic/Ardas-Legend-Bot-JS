@@ -40,7 +40,7 @@ public class UpdateClaimbuildFactionCommand implements ALStaffCommandExecutor {
         UpdateClaimbuildOwnerDto dto = new UpdateClaimbuildOwnerDto(claimbuildName, newFactionName);
 
         log.debug("UpdateClaimbuildFaction: Calling ServiceExecution");
-        var claimbuild = discordServiceExecution(dto, claimBuildService::setOwnerFaction, "Error while updating owning Faction of Claimbuild");
+        var claimbuild = discordServiceExecution(dto, claimBuildService::changeOwnerFromDto, "Error while updating owning Faction of Claimbuild");
 
 
         return new ALMessageResponse(null, new EmbedBuilder()

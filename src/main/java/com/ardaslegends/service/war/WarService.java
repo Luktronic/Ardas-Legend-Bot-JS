@@ -1,11 +1,9 @@
 package com.ardaslegends.service.war;
 
 import com.ardaslegends.domain.Faction;
-import com.ardaslegends.domain.Player;
 import com.ardaslegends.domain.war.War;
 import com.ardaslegends.repository.exceptions.NotFoundException;
 import com.ardaslegends.repository.faction.FactionRepository;
-import com.ardaslegends.repository.player.PlayerRepository;
 import com.ardaslegends.repository.war.WarRepository;
 import com.ardaslegends.service.AbstractService;
 import com.ardaslegends.service.PlayerService;
@@ -14,7 +12,6 @@ import com.ardaslegends.service.discord.messages.war.WarMessages;
 import com.ardaslegends.service.dto.war.CreateWarDto;
 import com.ardaslegends.service.dto.war.EndWarDto;
 import com.ardaslegends.service.exceptions.logic.faction.FactionServiceException;
-import com.ardaslegends.service.exceptions.logic.player.PlayerServiceException;
 import com.ardaslegends.service.exceptions.logic.war.WarServiceException;
 import com.ardaslegends.service.exceptions.permission.StaffPermissionException;
 import com.ardaslegends.service.utils.ServiceUtils;
@@ -56,6 +53,12 @@ public class WarService extends AbstractService<War, WarRepository> {
         Objects.requireNonNull(createWarDto.executorDiscordId(), "ExecutorDiscordId must not be null");
         Objects.requireNonNull(createWarDto.nameOfWar(), "Name of War must not be null");
         Objects.requireNonNull(createWarDto.defendingFactionName(), "Defending Faction Name must not be null");
+
+        val activeWarWithName = warRepository.queryActiveWarByName(createWarDto.nameOfWar());
+        if(activeWarWithName.isPresent()) {
+            log.warn("Cannot create war because active war with name [{}] already exists!", createWarDto.nameOfWar());
+            throw WarServiceException.activeWarAlreadyExists(createWarDto.nameOfWar());
+        }
 
         log.trace("Fetching player with discordId [{}]", createWarDto.executorDiscordId());
         var executorPlayer = playerService.getPlayerByDiscordId(createWarDto.executorDiscordId());
@@ -144,35 +147,36 @@ public class WarService extends AbstractService<War, WarRepository> {
         return war;
     }
 
-    public War getWarByName(String name) {
-        log.debug("Getting war with name [{}]", name);
+    public Set<War> getWarsByName(String name) {
+        log.debug("Getting wars with name [{}]", name);
 
         Objects.requireNonNull(name, "War name must not be null!");
         ServiceUtils.checkBlankString(name, "name");
 
-        log.debug("Fetching war with name [{}]", name);
-        val foundWar = secureFind(name, warRepository::findByName);
+        log.debug("Fetching wars with name [{}]", name);
+        val foundWars = secureFind(name, warRepository::findByName);
 
-        if(foundWar.isEmpty()) {
-            log.warn("Found no war with name [{}]", name);
+        if(foundWars.isEmpty()) {
+            log.warn("Found no wars with name [{}]", name);
             throw NotFoundException.noWarWithNameFound(name);
         }
-        val war = foundWar.get();
 
-        log.debug("Found war [{}] between attacker [{}] and defender [{}]", war.getName(), war.getInitialAttacker().getWarParticipant().getName(), war.getInitialDefender().getWarParticipant().getName());
-        return war;
+        foundWars.forEach(war -> {
+            log.debug("Found war [{}] between attacker [{}] and defender [{}]", war.getName(), war.getInitialAttacker().getWarParticipant().getName(), war.getInitialDefender().getWarParticipant().getName());
+        });
+        return foundWars;
     }
 
     public War getActiveWarByName(String name) {
         log.debug("Getting active war with name [{}]", name);
-        val war = getWarByName(name);
+        val foundWar = warRepository.queryActiveWarByName(name);
 
-        if(!war.getIsActive()) {
-            log.warn("War [{}] is not active!", name);
-            throw WarServiceException.warNotActive(name);
+        if(foundWar.isEmpty()) {
+            log.warn("Found no war with name [{}]!", name);
+            throw NotFoundException.noActiveWarWithNameFound(name);
         }
-
-        log.info("Found active war [{}] between attacker [{}] and defender [{}]", war.getName(), war.getInitialAttacker().getWarParticipant().getName(), war.getInitialDefender().getWarParticipant().getName());
+        val war = foundWar.get();
+        log.info("Found active war with name [{}] between attacker [{}] and defender [{}]", war.getName(), war.getInitialAttacker().getWarParticipant().getName(), war.getInitialDefender().getWarParticipant().getName());
         return war;
     }
 

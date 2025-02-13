@@ -102,10 +102,10 @@ public class ClaimbuildServiceTest {
         when(mockFactionService.getFactionByName(faction.getName())).thenReturn(faction);
         when(mockFactionService.getFactionByName(faction2.getName())).thenReturn(faction2);
         when(mockProductionSiteRepository.
-                findProductionSiteByTypeAndProducedResource_ResourceName(productionSiteType, productionSite.getProducedResource().getResourceName()))
+                queryByTypeAndResourceOptional(productionSiteType, productionSite.getProducedResource().getResourceName()))
                 .thenReturn(Optional.of(productionSite));
         when(mockProductionSiteRepository.
-                findProductionSiteByTypeAndProducedResource_ResourceName(productionSiteType, productionSite2.getProducedResource().getResourceName()))
+                queryByTypeAndResourceOptional(productionSiteType, productionSite2.getProducedResource().getResourceName()))
                 .thenReturn(Optional.of(productionSite2));
         when(mockPlayerService.getPlayerByIgn(player.getIgn())).thenReturn(player);
         when(mockPlayerService.getPlayerByIgn(player2.getIgn())).thenReturn(player2);
@@ -123,7 +123,7 @@ public class ClaimbuildServiceTest {
         when(mockClaimbuildRepository.save(claimbuild)).thenReturn(claimbuild);
 
         log.debug("Calling setOwnerFaction, expecting no errors");
-        var result = claimBuildService.setOwnerFaction(dto);
+        var result = claimBuildService.changeOwnerFromDto(dto);
 
         assertThat(result).isNotNull();
         assertThat(result.getName()).isEqualTo(dto.claimbuildName());

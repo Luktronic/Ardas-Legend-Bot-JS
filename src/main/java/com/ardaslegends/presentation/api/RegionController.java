@@ -6,7 +6,6 @@ import com.ardaslegends.presentation.AbstractRestController;
 import com.ardaslegends.presentation.api.response.region.RegionResponse;
 import com.ardaslegends.presentation.api.response.region.RegionResponseDetailed;
 import com.ardaslegends.service.RegionService;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -27,7 +26,7 @@ public class RegionController extends AbstractRestController {
     private static final String GET_ALL = "/all";
     private static final String GET_ALL_DETAILED = "/all/detailed";
     private static final String GET_REGION_TYPES = "/types";
-    private static final String GET_RPCHARS = "/{id}";
+    private static final String GET_REGION_BY_ID = "/{regionId}";
 
     private final RegionService regionService;
 
@@ -43,8 +42,8 @@ public class RegionController extends AbstractRestController {
         return ResponseEntity.ok(regionsResponse);
     }
 
-    @GetMapping(GET_RPCHARS)
-    public ResponseEntity<RegionResponse> getRegion(@PathVariable String regionId) {
+    @GetMapping(GET_REGION_BY_ID)
+    public ResponseEntity<RegionResponseDetailed> getRegion(@PathVariable String regionId) {
         log.debug("Incoming getRegion Request with regionId path variable [{}]", regionId);
 
         log.debug("Calling RegionService getRegion()");
@@ -52,7 +51,7 @@ public class RegionController extends AbstractRestController {
         log.debug("Got region [{}]", region);
 
         log.trace("Building RegionResponse");
-        val regionResponse = new RegionResponse(region);
+        val regionResponse = new RegionResponseDetailed(region);
         log.debug("Built RegionResponse {}", regionResponse);
 
         log.info("Succesfully handled GetRegion request and sending response [{}]", regionResponse);

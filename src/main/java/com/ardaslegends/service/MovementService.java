@@ -92,7 +92,7 @@ public class MovementService extends AbstractService<Movement, MovementRepositor
         }
 
         log.debug("Checking if army is older than 24h");
-        if(OffsetDateTime.now().isBefore(army.getCreatedAt().plusDays(1))) {
+        if(army.isYoungerThan24h()) {
             log.warn("Army [{}] is younger than 24h and therefore cannot move!", army);
             long hoursUntilMove = 24 - Duration.between(army.getCreatedAt(), OffsetDateTime.now()).toHours();
             log.debug("Army can move again in [{}] hours", hoursUntilMove);
@@ -116,10 +116,9 @@ public class MovementService extends AbstractService<Movement, MovementRepositor
         var currentTime = OffsetDateTime.now();
         log.debug("Creating movement object");
         int hoursUntilDone = ServiceUtils.getTotalPathCost(path);  //Gets a sum of all the
-        Region secondRegion = path.get(1).getRegion();
-        int hoursUntilNextRegion = secondRegion.getCost();
+        val reachesNextRegionAt = currentTime.plusHours(path.get(1).getActualCost());
         val character = player.getActiveCharacter().orElseThrow(PlayerServiceException::noRpChar);
-        Movement movement = new Movement(character, army, false, path, currentTime, currentTime.plusHours(hoursUntilDone), true, hoursUntilDone, hoursUntilNextRegion, 0);
+        Movement movement = new Movement(character, army, false, path, currentTime, currentTime.plusHours(hoursUntilDone), true, reachesNextRegionAt);
         return movement;
     }
 
@@ -239,8 +238,8 @@ public class MovementService extends AbstractService<Movement, MovementRepositor
 
         log.trace("Building the movement object");
         int hoursUntilDone = ServiceUtils.getTotalPathCost(path);
-        int hoursUntilNextRegion = path.get(1).getActualCost();
-        Movement movement = new Movement(rpChar, null, true, path, currentTime, currentTime.plusHours(hoursUntilDone), true, hoursUntilDone, hoursUntilNextRegion, 0);
+        val reachesNextRegionAt = currentTime.plusHours(path.get(1).getActualCost());
+        Movement movement = new Movement(rpChar, null, true, path, currentTime, currentTime.plusHours(hoursUntilDone), true, reachesNextRegionAt);
 
         return movement;
     }

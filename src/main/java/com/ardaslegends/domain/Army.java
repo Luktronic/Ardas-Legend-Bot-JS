@@ -1,6 +1,5 @@
 package com.ardaslegends.domain;
 
-import com.fasterxml.jackson.annotation.*;
 import lombok.*;
 
 import jakarta.persistence.*;
@@ -19,9 +18,6 @@ import java.util.Optional;
 
 @Entity
 @Table(name = "armies")
-@JsonIdentityInfo(
-        generator = ObjectIdGenerators.PropertyGenerator.class,
-        property = "name")
 public final class Army extends AbstractDomainObject {
 
     @Id
@@ -68,13 +64,13 @@ public final class Army extends AbstractDomainObject {
     private OffsetDateTime healEnd;
     private Integer hoursHealed;
     private Integer hoursLeftHealing;
+    private OffsetDateTime healLastUpdatedAt;
     @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinColumn(name = "origin_claimbuild", foreignKey = @ForeignKey(name = "fk_armies_origin_claimbuild"))
     private ClaimBuild originalClaimbuild; //claimbuild where this army was created from
 
     private OffsetDateTime createdAt;
 
-    @JsonIgnore
     @OneToMany(mappedBy = "army", cascade = {CascadeType.REMOVE})
     private List<Movement> movements = new ArrayList<>();
 
@@ -123,11 +119,12 @@ public final class Army extends AbstractDomainObject {
         return this.units.stream().allMatch(unit -> Objects.equals(unit.getAmountAlive(), unit.getCount()));
     }
 
+    public boolean hasUnitsLeft() { return units.stream().anyMatch(unit -> unit.getAmountAlive() > 0); }
+
     public Optional<Movement> getActiveMovement() {
         return this.getMovements().stream().filter(Movement::getIsCurrentlyActive).findFirst();
     }
 
-    @JsonIgnore
     public int getAmountOfHealHours() {
         double tokensMissing = units.stream()
                 .map(unit -> ((unit.getCount()-unit.getAmountAlive())) * unit.getCost())
@@ -143,12 +140,15 @@ public final class Army extends AbstractDomainObject {
         return intHoursHeal + hoursLeftUntil24h;
     }
 
-    @JsonIgnore
     public void resetHealingStats() {
         this.setIsHealing(false);
         this.setHealStart(null);
         this.setHealEnd(null);
         this.setHoursHealed(0);
         this.setHoursLeftHealing(0);
+    }
+
+    public boolean isYoungerThan24h() {
+        return OffsetDateTime.now().isBefore(this.createdAt.plusHours(24));
     }
 }

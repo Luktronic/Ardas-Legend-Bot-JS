@@ -1,11 +1,9 @@
 package com.ardaslegends.domain;
 
 import com.ardaslegends.service.exceptions.logic.faction.FactionServiceException;
-import com.fasterxml.jackson.annotation.*;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.Length;
-import org.javacord.api.entity.permission.Role;
 
 import jakarta.persistence.*;
 import java.util.*;
@@ -19,9 +17,6 @@ import java.util.*;
 @Slf4j
 @Entity
 @Table(name = "factions")
-@JsonIdentityInfo(
-        generator = ObjectIdGenerators.PropertyGenerator.class,
-        property = "name")
 public final class Faction extends AbstractDomainObject {
 
     @Id
@@ -37,7 +32,6 @@ public final class Faction extends AbstractDomainObject {
     private Player leader; //the player who leads this faction
 
     @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, mappedBy = "faction")
-    @JsonIdentityReference(alwaysAsId=true)
     private List<Army> armies; //all current armies of this faction
     @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, mappedBy = "faction")
     private List<Player> players; //all current players of this faction
@@ -83,7 +77,6 @@ public final class Faction extends AbstractDomainObject {
         this.foodStockpile = 0;
     }
 
-    @JsonIgnore
     public void addFoodToStockpile(int amount) {
         log.debug("Adding food [amount:{}] to stockpile of faction [{}]", amount, this.name);
         if(amount < 0) {
@@ -93,7 +86,6 @@ public final class Faction extends AbstractDomainObject {
         this.foodStockpile += amount;
     }
 
-    @JsonIgnore
     public void subtractFoodFromStockpile(int amount) {
         log.debug("Removing food [amount: {}] from stockpile of faction [{}]", amount, this.name);
         if(amount < 0) {

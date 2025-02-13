@@ -49,6 +49,7 @@ public class RPChar extends AbstractEntity {
     private Boolean isHealing;
     private OffsetDateTime startedHeal;
     private OffsetDateTime healEnds;
+    private OffsetDateTime healLastUpdatedAt;
     private String linkToLore;
 
     private Boolean active;

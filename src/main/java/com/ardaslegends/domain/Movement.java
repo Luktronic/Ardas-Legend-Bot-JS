@@ -1,12 +1,12 @@
 package com.ardaslegends.domain;
 
 import com.ardaslegends.service.utils.ServiceUtils;
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import lombok.*;
 
 import jakarta.persistence.*;
 import lombok.extern.slf4j.Slf4j;
+
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Objects;
@@ -18,9 +18,6 @@ import java.util.Objects;
 @Builder
 @Slf4j
 
-@JsonIdentityInfo(
-        generator = ObjectIdGenerators.PropertyGenerator.class,
-        property = "id")
 @Entity
 @Table(name = "movements")
 public final class Movement extends AbstractDomainObject {
@@ -46,14 +43,14 @@ public final class Movement extends AbstractDomainObject {
     private OffsetDateTime endTime;
 
     private Boolean isCurrentlyActive;
-    private Integer hoursUntilComplete;
-    private Integer hoursMoved;
-    private Integer hoursUntilNextRegion;
+
+    private OffsetDateTime reachesNextRegionAt;
+    private OffsetDateTime lastUpdatedAt;
 
     public String getStartRegionId() { return path.get(0).getRegion().getId(); }
     public String getDestinationRegionId() { return path.get(path.size()-1).getRegion().getId(); }
 
-    public Movement(RPChar rpChar, Army army, Boolean isCharMovement, List<PathElement> path, OffsetDateTime startTime, OffsetDateTime endTime, Boolean isCurrentlyActive, Integer hoursUntilComplete, Integer hoursUntilNextRegion, Integer hoursMoved) {
+    public Movement(RPChar rpChar, Army army, Boolean isCharMovement, List<PathElement> path, OffsetDateTime startTime, OffsetDateTime endTime, Boolean isCurrentlyActive, OffsetDateTime reachesNextRegionAt) {
         this.rpChar = rpChar;
         this.army = army;
         this.isCharMovement = isCharMovement;
@@ -61,9 +58,30 @@ public final class Movement extends AbstractDomainObject {
         this.startTime = startTime;
         this.endTime = endTime;
         this.isCurrentlyActive = isCurrentlyActive;
-        this.hoursUntilComplete = hoursUntilComplete;
-        this.hoursUntilNextRegion = hoursUntilNextRegion;
-        this.hoursMoved = hoursMoved;
+        this.reachesNextRegionAt = reachesNextRegionAt;
+    }
+
+    /**
+     * Sets the movement to inactive and sets reachesNextRegionAt to null.
+     */
+    public void end() {
+        log.debug("Ending movement of {} {} with path {}", getMovingEntity(), getMovingEntityName(), ServiceUtils.buildPathString(path));
+        isCurrentlyActive = false;
+        reachesNextRegionAt = null;
+    }
+
+    /**
+     * @return Either "army" or "character", depending on the kind of entity that is moving.
+     */
+    public String getMovingEntity() {
+        return isCharMovement ? "character" : "army";
+    }
+
+    /**
+     * @return The name of the army/character that is moving
+     */
+    public String getMovingEntityName() {
+        return isCharMovement ? rpChar.getName() : army.getName();
     }
 
     public Integer getCost() {
@@ -73,6 +91,20 @@ public final class Movement extends AbstractDomainObject {
 
     public Region getCurrentRegion() {
         return isCharMovement ? rpChar.getCurrentRegion() : army.getCurrentRegion();
+    }
+    public void setCurrentRegion(Region region) {
+        if(isCharMovement) {
+            log.trace("Movement is char movement, setting current region to [{}]", region);
+            rpChar.setCurrentRegion(region);
+        }
+        else {
+            log.trace("Movement is army movement, setting current region to [{}]", region);
+            army.setCurrentRegion(region);
+            if(army.getBoundTo() != null) {
+                log.trace("Army is bound to a character, setting the character's region to [{}]", region);
+                army.getBoundTo().setCurrentRegion(region);
+            }
+        }
     }
 
     /**
@@ -105,6 +137,23 @@ public final class Movement extends AbstractDomainObject {
         if(nextRegionIndex >= path.size())
             return null;
         return path.get(nextRegionIndex);
+    }
+
+    public Duration getDurationUntilNextRegion() {
+        if(reachesNextRegionAt == null)
+            return Duration.ZERO;
+        else
+            return Duration.between(OffsetDateTime.now(), reachesNextRegionAt);
+    }
+
+    public Duration getDurationUntilComplete() {
+        val now = OffsetDateTime.now();
+        return Duration.between(now, endTime);
+    }
+
+    public Duration getDurationAlreadyMoved() {
+        val now = OffsetDateTime.now();
+        return Duration.between(startTime, now);
     }
 
     @Override

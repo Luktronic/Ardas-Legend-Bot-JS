@@ -883,7 +883,7 @@ public class ArmyServiceTest {
         DeleteArmyDto dto = new DeleteArmyDto(player.getDiscordID(), army.getName());
 
         log.debug("Calling disbandArmy");
-        Army returnedArmy = armyService.disband(dto, false);
+        Army returnedArmy = armyService.disbandFromDto(dto, false);
 
         log.debug("Asserting that returned/deleted army is same as inputted army");
         assertThat(returnedArmy).isEqualTo(army);
@@ -902,7 +902,7 @@ public class ArmyServiceTest {
         DeleteArmyDto dto = new DeleteArmyDto(player.getDiscordID(), army.getName());
 
         log.debug("Calling disbandArmy");
-        var exception = assertThrows(ArmyServiceException.class, () -> armyService.disband(dto, false));
+        var exception = assertThrows(ArmyServiceException.class, () -> armyService.disbandFromDto(dto, false));
 
         log.debug("Asserting that error has correct message");
         assertThat(exception.getMessage()).isEqualTo(ArmyServiceException.notAllowedToDisbandNotSameFaction(army.getArmyType(), army.getName(), army.getFaction().getName()).getMessage());
@@ -917,7 +917,7 @@ public class ArmyServiceTest {
         DeleteArmyDto dto = new DeleteArmyDto(player.getDiscordID(), army.getName());
 
         log.debug("Calling disbandArmy");
-        var exception = assertThrows(ArmyServiceException.class, () -> armyService.disband(dto, false));
+        var exception = assertThrows(ArmyServiceException.class, () -> armyService.disbandFromDto(dto, false));
 
         log.debug("Asserting that error has correct message");
         assertThat(exception.getMessage()).isEqualTo(ArmyServiceException.notAllowedToDisband(army.getArmyType()).getMessage());
@@ -936,7 +936,7 @@ public class ArmyServiceTest {
         DeleteArmyDto dto = new DeleteArmyDto(player.getDiscordID(), army.getName());
 
         log.debug("Calling disbandArmy");
-        Army returnedArmy = armyService.disband(dto, false);
+        Army returnedArmy = armyService.disbandFromDto(dto, false);
 
         assertThat(returnedArmy.getBoundTo()).isNull();
         assertThat(rpchar.getBoundTo()).isNull();
@@ -955,7 +955,7 @@ public class ArmyServiceTest {
         DeleteArmyDto dto = new DeleteArmyDto(player.getDiscordID(), army.getName());
 
         log.debug("Calling disbandArmy");
-        Army returnedArmy = armyService.disband(dto, true);
+        Army returnedArmy = armyService.disbandFromDto(dto, true);
 
         log.debug("Asserting that returned/deleted army is same as inputted army");
         assertThat(returnedArmy).isEqualTo(army);

@@ -1,8 +1,6 @@
 package com.ardaslegends.domain;
 
 import com.ardaslegends.service.exceptions.logic.player.PlayerServiceException;
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 
@@ -19,9 +17,6 @@ import java.util.*;
 @Slf4j
 @Entity
 @Table(name = "players")
-@JsonIdentityInfo(
-        generator = ObjectIdGenerators.PropertyGenerator.class,
-        property = "ign")
 public final class Player extends AbstractDomainObject {
 
     @Id

@@ -55,10 +55,13 @@ public class ArmyRestController extends AbstractRestController {
     public HttpEntity<ArmyResponse> createArmy(@RequestBody CreateArmyDto dto) {
         log.debug("Incoming createArmy Request: Data [{}]", dto);
 
-        var units = armyService.convertUnitInputIntoUnits(dto.unitString());
-        CreateArmyDto dtoWithUnits = new CreateArmyDto(dto.executorDiscordId(), dto.name(), dto.armyType(), dto.claimBuildName(), units);
+        if(dto.unitString() != null) {
+            log.debug("Found unitString in CreateArmyDto, building units from string");
+            var units = armyService.convertUnitInputIntoUnits(dto.unitString());
+            dto = new CreateArmyDto(dto.executorDiscordId(), dto.name(), dto.armyType(), dto.claimBuildName(), units);
+        }
         log.debug("Calling ArmyService.createArmy");
-        Army createdArmy = armyService.createArmy(dtoWithUnits);
+        Army createdArmy = armyService.createArmy(dto);
         log.debug("Converting to ArmyResponse");
         ArmyResponse response = new ArmyResponse(createdArmy);
 
@@ -97,7 +100,7 @@ public class ArmyRestController extends AbstractRestController {
         log.debug("Incoming disbandArmy Request: Data [{}]", dto);
 
         log.debug("Calling ArmyService.unbind()");
-        Army disbandedArmy = armyService.disband(dto, false);
+        Army disbandedArmy = armyService.disbandFromDto(dto, false);
         log.debug("Converting to ArmyResponse");
         ArmyResponse response = new ArmyResponse(disbandedArmy);
 
@@ -110,7 +113,7 @@ public class ArmyRestController extends AbstractRestController {
         log.debug("Incoming deleteArmy Request: Data [{}]", dto);
 
         log.debug("Calling ArmyService.disband()");
-        Army deletedArmy = armyService.disband(dto, true);
+        Army deletedArmy = armyService.disbandFromDto(dto, true);
         log.debug("Converting to ArmyResponse");
         ArmyResponse response = new ArmyResponse(deletedArmy);
 

@@ -1,6 +1,6 @@
 package com.ardaslegends.presentation.api.response.war;
 
-import com.ardaslegends.domain.war.Battle;
+import com.ardaslegends.domain.war.battle.Battle;
 import com.ardaslegends.domain.war.War;
 
 public record BattleResponse(

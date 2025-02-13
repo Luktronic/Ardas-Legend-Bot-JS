@@ -17,9 +17,9 @@ import java.util.concurrent.Executors;
 @Configuration
 public class ArdaConfiguration {
     @Bean
-    public ExecutorService asyncExecutorService() {
-        var executor = Executors.newFixedThreadPool(4);
-        log.info("Initialized asyncExecutorService");
+    public ExecutorService virtualExecutorService() {
+        var executor = Executors.newVirtualThreadPerTaskExecutor();
+        log.info("Initialized virtualExecutorService");
         return executor;
     }
 

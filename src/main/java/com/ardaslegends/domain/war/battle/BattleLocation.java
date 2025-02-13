@@ -1,4 +1,4 @@
-package com.ardaslegends.domain.war;
+package com.ardaslegends.domain.war.battle;
 
 import com.ardaslegends.domain.ClaimBuild;
 import com.ardaslegends.domain.Region;
@@ -7,8 +7,11 @@ import jakarta.persistence.Embeddable;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import lombok.Getter;
 
 import java.util.Objects;
+
+@Getter
 
 @Embeddable
 public class BattleLocation {

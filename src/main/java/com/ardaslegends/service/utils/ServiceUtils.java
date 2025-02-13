@@ -7,11 +7,14 @@ import com.ardaslegends.domain.Region;
 import com.ardaslegends.service.exceptions.logic.player.PlayerServiceException;
 import com.ardaslegends.service.exceptions.ServiceException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.time.DurationFormatUtils;
 
 import java.lang.reflect.Field;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -112,6 +115,11 @@ public class ServiceUtils {
 
     public static Integer getFoodCost(List<PathElement> path) {
         return (int)Math.ceil(ServiceUtils.getTotalPathCost(path) / 24.0);
+    }
+
+    public static String formatDuration(Duration duration) {
+        Objects.requireNonNull(duration, "Duration must not be null in formatDuration");
+        return DurationFormatUtils.formatDurationWords(duration.toMillis(), true, true);
     }
 
     // TODO: This needs a rewrite ->

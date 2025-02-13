@@ -12,6 +12,7 @@ import com.ardaslegends.service.exceptions.logic.claimbuild.ClaimBuildServiceExc
 import com.ardaslegends.service.utils.ServiceUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -39,7 +40,7 @@ public class ClaimBuildService extends AbstractService<ClaimBuild, ClaimbuildRep
     }
 
     @Transactional(readOnly = false)
-    public ClaimBuild setOwnerFaction(UpdateClaimbuildOwnerDto dto) {
+    public ClaimBuild changeOwnerFromDto(UpdateClaimbuildOwnerDto dto) {
         log.debug("Trying to set the controlling faction of Claimbuild [{}] to [{}]", dto.claimbuildName(), dto.newFaction());
 
         ServiceUtils.checkNulls(dto, List.of("claimbuildName", "newFaction"));
@@ -51,13 +52,20 @@ public class ClaimBuildService extends AbstractService<ClaimBuild, ClaimbuildRep
         log.trace("Fetching faction with name [{}]", dto.newFaction());
         Faction faction = factionService.getFactionByName(dto.newFaction());
 
+        return changeOwner(claimBuild, faction);
+    }
+
+    @Transactional(readOnly = false)
+    public ClaimBuild changeOwner(ClaimBuild claimBuild, Faction newOwner) {
+        log.debug("Trying to set owner of claimbuild [{}] to faction [{}]", claimBuild, newOwner);
+
         log.trace("Setting ownedBy");
-        claimBuild.setOwnedBy(faction);
+        claimBuild.setOwnedBy(newOwner);
 
         log.debug("Persisting claimbuild [{}], with owning faction [{}]", claimBuild.getName(), claimBuild.getOwnedBy());
         claimBuild = secureSave(claimBuild, claimbuildRepository);
 
-        log.info("Successfully returning claimbuild [{}] with new controlling faction [{}]", claimBuild.getName(), claimBuild.getOwnedBy());
+        log.info("Successfully set ownership of claimbuild [{}] to faction [{}]", claimBuild.getName(), claimBuild.getOwnedBy());
         return claimBuild;
     }
 
@@ -237,7 +245,7 @@ public class ClaimBuildService extends AbstractService<ClaimBuild, ClaimbuildRep
         Arrays.stream(names).forEach(str -> ServiceUtils.checkBlankString(str, "Name"));
 
         log.debug("Fetching claimbuilds with names [{}]", (Object) names);
-        List<ClaimBuild> fetchedClaimbuilds = secureFind(names, claimbuildRepository::findClaimBuildsByNames);
+        List<ClaimBuild> fetchedClaimbuilds = secureFind(names, claimbuildRepository::queryByNames);
 
         if(fetchedClaimbuilds.isEmpty()) {
             log.warn("No Claimbuild found with names [{}]", (Object) names);
@@ -245,6 +253,27 @@ public class ClaimBuildService extends AbstractService<ClaimBuild, ClaimbuildRep
         }
 
         log.debug("Successfully returning Claimbuilds found with names [{}]", (Object) names);
+        return fetchedClaimbuilds;
+    }
+
+    public List<ClaimBuild> getClaimBuildsByFaction(String factionName) {
+        log.debug("Getting Claimbuilds of faction [{}]", factionName);
+
+        Objects.requireNonNull(factionName, "FactionName must not be null");
+        ServiceUtils.checkBlankString(factionName, "faction");
+
+        log.debug("Getting faction [{}]", factionName);
+        val faction = factionService.getFactionByName(factionName);
+
+        log.debug("Fetching claimbuilds of faction [{}]", factionName);
+        List<ClaimBuild> fetchedClaimbuilds = secureFind(faction, claimbuildRepository::queryByFaction);
+
+        if(fetchedClaimbuilds.isEmpty()) {
+            log.warn("No Claimbuild found for faction [{}]", faction);
+            throw ClaimBuildServiceException.factionHasNoCbs(factionName);
+        }
+
+        log.debug("Successfully returning Claimbuilds found for faction [{}]", faction);
         return fetchedClaimbuilds;
     }
 
@@ -303,7 +332,7 @@ public class ClaimBuildService extends AbstractService<ClaimBuild, ClaimbuildRep
             }
 
             log.debug("Fetching Production Site with type [{}] and resource [{}]", type, resource);
-            Optional<ProductionSite> fetchedProdSite = secureFind(type, resource, productionSiteRepository::findProductionSiteByTypeAndProducedResource_ResourceName);
+            Optional<ProductionSite> fetchedProdSite = secureFind(type, resource, productionSiteRepository::queryByTypeAndResourceOptional);
 
             if(fetchedProdSite.isEmpty()) {
                 log.warn("No Production Site found for type [{}] and resource [{}]!", type, resource);
